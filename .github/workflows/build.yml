@@ -55,9 +55,18 @@ jobs:
       - name: Create QL Profile Compliant Variant
         run: |
           robot \
-            convert \
+            query \
               --input dl-profile/om-2.0.ttl \
+              --update scripts/om-2.0.unit-quantity-classification.ru \
+            query \
+              --update scripts/om-2.0.unit-prefix-classification.ru \
+            convert \
+              --add-prefixes scripts/om-2.0.prefixes.json \
               --output om-2.0.ql.ttl \
+            convert \
+              --add-prefixes scripts/om-2.0.prefixes.json \
+              --format owl \
+              --output om-2.0.ql.rdf
       - name: Check QL Profile Conformance
         run: |
           robot validate-profile --profile QL --input om-2.0.ql.ttl 1> om-2.0.ql.profile-validation.txt || {
@@ -92,7 +101,12 @@ jobs:
           robot \
             convert \
               --input dl-profile/om-2.0.ttl \
+              --add-prefixes scripts/om-2.0.prefixes.json \
               --output om-2.0.el.ttl \
+            convert \
+              --add-prefixes scripts/om-2.0.prefixes.json \
+              --format owl \
+              --output om-2.0.el.rdf
       - name: Check EL Profile Conformance
         run: |
           robot validate-profile --profile EL --input om-2.0.el.ttl 1> om-2.0.el.profile-validation.txt || {
@@ -127,7 +141,12 @@ jobs:
           robot \
             convert \
               --input dl-profile/om-2.0.ttl \
+              --add-prefixes scripts/om-2.0.prefixes.json \
               --output om-2.0.rl.ttl \
+            convert \
+              --add-prefixes scripts/om-2.0.prefixes.json \
+              --format owl \
+              --output om-2.0.rl.rdf
       - name: Check RL Profile Conformance
         run: |
           robot validate-profile --profile RL --input om-2.0.rl.ttl 1> om-2.0.rl.profile-validation.txt || {

@@ -1,0 +1,18 @@
+{
+  "@context": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "om": "http://www.ontology-of-units-of-measure.org/resource/om-2/",
+    "wv": "http://www.wurvoc.org/vocabularies/WV/",
+    "dct": "http://purl.org/dc/terms/",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "xml": "http://www.w3.org/XML/1998/namespace",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "bibo": "http://purl.org/ontology/bibo/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "ombibo": "http://www.wurvoc.org/bibliography/om-2/"
+  }
+}
+
