@@ -23,10 +23,134 @@ jobs:
             convert \
               --format owl \
               --output om-2.0.rdf
+      - name: Check DL Profile Conformance
+        run: |
+          robot validate-profile --profile DL --input om-2.0.ttl 1> om-2.0.dl.profile-validation.txt || {
+            sed -i '/Profile Report:/d' om-2.0.dl.profile-validation.txt;
+            sed -i '/PROFILE VIOLATION ERROR/d' om-2.0.dl.profile-validation.txt;
+            sed -i '/For details see:/d' om-2.0.dl.profile-validation.txt;
+            sed -i '/Use the -/d' om-2.0.dl.profile-validation.txt;
+            sed -i '/^\s*$/d' om-2.0.dl.profile-validation.txt;
+            sort -o om-2.0.dl.profile-validation.txt om-2.0.dl.profile-validation.txt;
+            exit 1
+          }
       - name: Store Artifacts
-        uses: actions/upload-artifact@v3
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
+          name: dl-profile
           path: om-2.0.*
+  qlprofile:
+    needs: build
+    runs-on: ubuntu-latest
+    container: obolibrary/robot:v1.9.5
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v4
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dl-profile
+          path: dl-profile
+      - name: Create QL Profile Compliant Variant
+        run: |
+          robot \
+            convert \
+              --input dl-profile/om-2.0.ttl \
+              --output om-2.0.ql.ttl \
+      - name: Check QL Profile Conformance
+        run: |
+          robot validate-profile --profile QL --input om-2.0.ql.ttl 1> om-2.0.ql.profile-validation.txt || {
+            sed -i '/Profile Report:/d' om-2.0.ql.profile-validation.txt;
+            sed -i '/PROFILE VIOLATION ERROR/d' om-2.0.ql.profile-validation.txt;
+            sed -i '/For details see:/d' om-2.0.ql.profile-validation.txt;
+            sed -i '/Use the -/d' om-2.0.ql.profile-validation.txt;
+            sed -i '/^\s*$/d' om-2.0.ql.profile-validation.txt;
+            sort -o om-2.0.ql.profile-validation.txt om-2.0.ql.profile-validation.txt;
+            exit 1
+          }
+      - name: Store Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ql-profile
+          path: om-2.0.ql.*
+  elprofile:
+    needs: build
+    runs-on: ubuntu-latest
+    container: obolibrary/robot:v1.9.5
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v4
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dl-profile
+          path: dl-profile
+      - name: Create EL Profile Compliant Variant
+        run: |
+          robot \
+            convert \
+              --input dl-profile/om-2.0.ttl \
+              --output om-2.0.el.ttl \
+      - name: Check EL Profile Conformance
+        run: |
+          robot validate-profile --profile EL --input om-2.0.el.ttl 1> om-2.0.el.profile-validation.txt || {
+            sed -i '/Profile Report:/d' om-2.0.el.profile-validation.txt;
+            sed -i '/PROFILE VIOLATION ERROR/d' om-2.0.el.profile-validation.txt;
+            sed -i '/For details see:/d' om-2.0.el.profile-validation.txt;
+            sed -i '/Use the -/d' om-2.0.el.profile-validation.txt;
+            sed -i '/^\s*$/d' om-2.0.el.profile-validation.txt;
+            sort -o om-2.0.el.profile-validation.txt om-2.0.el.profile-validation.txt;
+            exit 1
+          }
+      - name: Store Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: el-profile
+          path: om-2.0.el.*
+  rlprofile:
+    needs: build
+    runs-on: ubuntu-latest
+    container: obolibrary/robot:v1.9.5
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v4
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dl-profile
+          path: dl-profile
+      - name: Create RL Profile Compliant Variant
+        run: |
+          robot \
+            convert \
+              --input dl-profile/om-2.0.ttl \
+              --output om-2.0.rl.ttl \
+      - name: Check RL Profile Conformance
+        run: |
+          robot validate-profile --profile RL --input om-2.0.rl.ttl 1> om-2.0.rl.profile-validation.txt || {
+            sed -i '/Profile Report:/d' om-2.0.rl.profile-validation.txt;
+            sed -i '/PROFILE VIOLATION ERROR/d' om-2.0.rl.profile-validation.txt;
+            sed -i '/For details see:/d' om-2.0.rl.profile-validation.txt;
+            sed -i '/Use the -/d' om-2.0.rl.profile-validation.txt;
+            sed -i '/^\s*$/d' om-2.0.rl.profile-validation.txt;
+            sort -o om-2.0.rl.profile-validation.txt om-2.0.rl.profile-validation.txt;
+            exit 1
+          }
+      - name: Store Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rl-profile
+          path: om-2.0.rl.*
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
       - name: Release Files
         if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v1
