@@ -25,7 +25,9 @@ jobs:
               --output om-2.0.rdf
       - name: Check DL Profile Conformance
         run: |
-          robot validate-profile --profile DL --input om-2.0.ttl 1> om-2.0.dl.profile-validation.txt || {
+          robot validate-profile --profile DL --input om-2.0.ttl 1> om-2.0.dl.profile-validation.txt && {
+            rm om-2.0.dl.profile-validation.txt
+          } || {
             sed -i '/Profile Report:/d' om-2.0.dl.profile-validation.txt;
             sed -i '/PROFILE VIOLATION ERROR/d' om-2.0.dl.profile-validation.txt;
             sed -i '/For details see:/d' om-2.0.dl.profile-validation.txt;
@@ -41,6 +43,7 @@ jobs:
           name: dl-profile
           path: om-2.0.*
   qlprofile:
+    name: Generate and Validate QL Profile Variant
     needs: build
     runs-on: ubuntu-latest
     container: obolibrary/robot:v1.9.5
@@ -69,7 +72,9 @@ jobs:
               --output om-2.0.ql.rdf
       - name: Check QL Profile Conformance
         run: |
-          robot validate-profile --profile QL --input om-2.0.ql.ttl 1> om-2.0.ql.profile-validation.txt || {
+          robot validate-profile --profile QL --input om-2.0.ql.ttl 1> om-2.0.ql.profile-validation.txt && {
+            rm om-2.0.ql.profile-validation.txt
+          } || {
             sed -i '/Profile Report:/d' om-2.0.ql.profile-validation.txt;
             sed -i '/PROFILE VIOLATION ERROR/d' om-2.0.ql.profile-validation.txt;
             sed -i '/For details see:/d' om-2.0.ql.profile-validation.txt;
@@ -85,6 +90,7 @@ jobs:
           name: ql-profile
           path: om-2.0.ql.*
   elprofile:
+    name: Generate and Validate EL Profile Variant
     needs: build
     runs-on: ubuntu-latest
     container: obolibrary/robot:v1.9.5
@@ -109,7 +115,9 @@ jobs:
               --output om-2.0.el.rdf
       - name: Check EL Profile Conformance
         run: |
-          robot validate-profile --profile EL --input om-2.0.el.ttl 1> om-2.0.el.profile-validation.txt || {
+          robot validate-profile --profile EL --input om-2.0.el.ttl 1> om-2.0.el.profile-validation.txt && {
+            rm om-2.0.el.profile-validation.txt
+          } || {
             sed -i '/Profile Report:/d' om-2.0.el.profile-validation.txt;
             sed -i '/PROFILE VIOLATION ERROR/d' om-2.0.el.profile-validation.txt;
             sed -i '/For details see:/d' om-2.0.el.profile-validation.txt;
@@ -125,6 +133,7 @@ jobs:
           name: el-profile
           path: om-2.0.el.*
   rlprofile:
+    name: Generate and Validate RL Profile Variant
     needs: build
     runs-on: ubuntu-latest
     container: obolibrary/robot:v1.9.5
@@ -149,7 +158,9 @@ jobs:
               --output om-2.0.rl.rdf
       - name: Check RL Profile Conformance
         run: |
-          robot validate-profile --profile RL --input om-2.0.rl.ttl 1> om-2.0.rl.profile-validation.txt || {
+          robot validate-profile --profile RL --input om-2.0.rl.ttl 1> om-2.0.rl.profile-validation.txt && {
+            rm om-2.0.rl.profile-validation.txt
+          } || {
             sed -i '/Profile Report:/d' om-2.0.rl.profile-validation.txt;
             sed -i '/PROFILE VIOLATION ERROR/d' om-2.0.rl.profile-validation.txt;
             sed -i '/For details see:/d' om-2.0.rl.profile-validation.txt;
@@ -164,14 +175,69 @@ jobs:
         with:
           name: rl-profile
           path: om-2.0.rl.*
+  profilesummary:
+    name: Profile Validation Results
+    needs:
+      - build
+      - qlprofile
+      - elprofile
+      - rlprofile
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dl-profile
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ql-profile
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: el-profile
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: rl-profile
+      - name: Generate Summary
+        run: |
+          printf "|Profile|Violations|Valid|\n|---|---|---|\n" >> $GITHUB_STEP_SUMMARY
+          STATUS=0
+          if [ -f om-2.0.dl.profile-validation.txt ]; then
+            printf "|DL|$(wc -l < om-2.0.dl.profile-validation.txt)|❌|\n" >> $GITHUB_STEP_SUMMARY
+            STATUS=1
+          else
+            printf "|DL|0|✔️|\n" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -f om-2.0.ql.profile-validation.txt ]; then
+            printf "|QL|$(wc -l < om-2.0.ql.profile-validation.txt)|❌|\n" >> $GITHUB_STEP_SUMMARY
+            STATUS=1
+          else
+            printf "|QL|0|✔️|\n" >> GITHUB_STEP_SUMMARY
+          fi
+          if [ -f om-2.0.rl.profile-validation.txt ]; then
+            printf "|RL|$(wc -l < om-2.0.rl.profile-validation.txt)|❌|\n" >> $GITHUB_STEP_SUMMARY
+            STATUS=1
+          else
+            printf "|RL|0|✔️|\n" >> GITHUB_STEP_SUMMARY
+          fi
+          if [ -f om-2.0.el.profile-validation.txt ]; then
+            printf "|EL|$(wc -l < om-2.0.el.profile-validation.txt)|❌|\n" >> $GITHUB_STEP_SUMMARY
+            STATUS=1
+          else
+            printf "|EL|0|✔️|\n" >> GITHUB_STEP_SUMMARY
+          fi
+          exit $STATUS
   release:
     needs: build
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v4
       - name: Release Files
-        if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v1
         with:
           files: |
